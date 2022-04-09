@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+  labels:
+    {{- include "jarvis-spot-price-exporter.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "jarvis-spot-price-exporter.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        checksum/secret: {{ include (print $.Template.BasePath "/secret.yaml") . | sha256sum }}
+      labels:
+        {{- include "jarvis-spot-price-exporter.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 12 }}
+      {{- end }}
+      serviceAccountName: {{ include "jarvis-spot-price-exporter.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 12 }}
+      containers:
+      - name: {{ .Chart.Name }}
+        securityContext:
+          {{- toYaml .Values.securityContext | nindent 14 }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}    
+        env:
+        - name: BQ_ENABLE
+          valueFrom:
+            configMapKeyRef:
+              key: bq-enable
+              name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+        - name: BQ_INIT
+          valueFrom:
+            configMapKeyRef:
+              key: bq-init
+              name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+        - name: BQ_PROJECT_ID
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+              key: bq-project-id
+        - name: BQ_DATASET
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+              key: bq-dataset
+        - name: BQ_TABLE
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+              key: bq-table
+        - name: SOURCE
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+              key: source
+        - name: URL
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+              key: url
+        - name: QUERY
+          valueFrom:
+            configMapKeyRef:
+              name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+              key: query
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /secrets/keyfile.json
+        resources:
+          {{- toYaml .Values.resources | nindent 14 }}
+        volumeMounts:
+        - name: secrets
+          mountPath: /secrets
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 12 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 12 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 12 }}
+      {{- end }}
+      terminationGracePeriodSeconds: 300
+      volumes:
+      - name: secrets
+        secret:
+          defaultMode: 420
+          secretName: {{ include "jarvis-spot-price-exporter.fullname" . }}

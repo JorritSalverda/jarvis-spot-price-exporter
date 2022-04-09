@@ -1,0 +1,198 @@
+{
+  "data": {
+    "marketPricesElectricity": [
+      {
+        "till": "2022-04-08T00:00:00.000Z",
+        "from": "2022-04-07T23:00:00.000Z",
+        "marketPrice": 0.174,
+        "marketPriceTax": 0.0366303,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T01:00:00.000Z",
+        "from": "2022-04-08T00:00:00.000Z",
+        "marketPrice": 0.162,
+        "marketPriceTax": 0.0341145,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T02:00:00.000Z",
+        "from": "2022-04-08T01:00:00.000Z",
+        "marketPrice": 0.161,
+        "marketPriceTax": 0.0338625,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T03:00:00.000Z",
+        "from": "2022-04-08T02:00:00.000Z",
+        "marketPrice": 0.173,
+        "marketPriceTax": 0.0362922,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T04:00:00.000Z",
+        "from": "2022-04-08T03:00:00.000Z",
+        "marketPrice": 0.174,
+        "marketPriceTax": 0.0364665,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T05:00:00.000Z",
+        "from": "2022-04-08T04:00:00.000Z",
+        "marketPrice": 0.222,
+        "marketPriceTax": 0.04662,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T06:00:00.000Z",
+        "from": "2022-04-08T05:00:00.000Z",
+        "marketPrice": 0.25,
+        "marketPriceTax": 0.052479,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T07:00:00.000Z",
+        "from": "2022-04-08T06:00:00.000Z",
+        "marketPrice": 0.282,
+        "marketPriceTax": 0.059262,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T08:00:00.000Z",
+        "from": "2022-04-08T07:00:00.000Z",
+        "marketPrice": 0.3,
+        "marketPriceTax": 0.062979,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T09:00:00.000Z",
+        "from": "2022-04-08T08:00:00.000Z",
+        "marketPrice": 0.308,
+        "marketPriceTax": 0.06468,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T10:00:00.000Z",
+        "from": "2022-04-08T09:00:00.000Z",
+        "marketPrice": 0.25,
+        "marketPriceTax": 0.052479,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T11:00:00.000Z",
+        "from": "2022-04-08T10:00:00.000Z",
+        "marketPrice": 0.222,
+        "marketPriceTax": 0.04662,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T12:00:00.000Z",
+        "from": "2022-04-08T11:00:00.000Z",
+        "marketPrice": 0.222,
+        "marketPriceTax": 0.04662,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T13:00:00.000Z",
+        "from": "2022-04-08T12:00:00.000Z",
+        "marketPrice": 0.23,
+        "marketPriceTax": 0.0483,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T14:00:00.000Z",
+        "from": "2022-04-08T13:00:00.000Z",
+        "marketPrice": 0.23,
+        "marketPriceTax": 0.048279,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T15:00:00.000Z",
+        "from": "2022-04-08T14:00:00.000Z",
+        "marketPrice": 0.233,
+        "marketPriceTax": 0.048846,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T16:00:00.000Z",
+        "from": "2022-04-08T15:00:00.000Z",
+        "marketPrice": 0.186,
+        "marketPriceTax": 0.03908310000000001,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T17:00:00.000Z",
+        "from": "2022-04-08T16:00:00.000Z",
+        "marketPrice": 0.202,
+        "marketPriceTax": 0.0424851,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T18:00:00.000Z",
+        "from": "2022-04-08T17:00:00.000Z",
+        "marketPrice": 0.23,
+        "marketPriceTax": 0.048279,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T19:00:00.000Z",
+        "from": "2022-04-08T18:00:00.000Z",
+        "marketPrice": 0.268,
+        "marketPriceTax": 0.0562317,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T20:00:00.000Z",
+        "from": "2022-04-08T19:00:00.000Z",
+        "marketPrice": 0.259,
+        "marketPriceTax": 0.05439840000000001,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T21:00:00.000Z",
+        "from": "2022-04-08T20:00:00.000Z",
+        "marketPrice": 0.255,
+        "marketPriceTax": 0.0534513,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T22:00:00.000Z",
+        "from": "2022-04-08T21:00:00.000Z",
+        "marketPrice": 0.247,
+        "marketPriceTax": 0.0517923,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      },
+      {
+        "till": "2022-04-08T23:00:00.000Z",
+        "from": "2022-04-08T22:00:00.000Z",
+        "marketPrice": 0.249,
+        "marketPriceTax": 0.0523635,
+        "sourcingMarkupPrice": 0.017,
+        "energyTaxPrice": 0.081
+      }
+    ]
+  }
+}

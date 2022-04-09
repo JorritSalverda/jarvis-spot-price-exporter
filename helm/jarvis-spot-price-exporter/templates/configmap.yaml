@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+  labels:
+    {{- include "jarvis-spot-price-exporter.labels" . | nindent 4 }}
+data:
+  bq-enable: {{ .Values.config.bqEnable | quote }}
+  bq-init: {{ .Values.config.bqInit | quote }}
+  bq-project-id: {{ .Values.config.bqProjectID | quote }}
+  bq-dataset: {{ .Values.config.bqDataset | quote }}
+  bq-table: {{ .Values.config.bqTable | quote }}
+  source: {{ .Values.config.source | quote }}
+  url: {{ .Values.config.url | quote }}
+  query: {{ .Values.config.query | quote }}
