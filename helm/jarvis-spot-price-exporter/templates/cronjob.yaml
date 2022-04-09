@@ -1,0 +1,108 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+  labels:
+    {{- include "jarvis-spot-price-exporter.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.cronjob.schedule | quote }}
+  concurrencyPolicy: {{ .Values.cronjob.concurrencyPolicy }}
+  failedJobsHistoryLimit: {{ .Values.cronjob.failedJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ .Values.cronjob.successfulJobsHistoryLimit }}
+  suspend: false
+  jobTemplate:
+    spec:
+      completions: 1
+      parallelism: 1
+      backoffLimit: 0
+      activeDeadlineSeconds: 240
+      ttlSecondsAfterFinished: {{ .Values.cronjob.ttlSecondsAfterFinished }}
+      template:
+        metadata:
+          {{- with .Values.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}  
+          labels:
+            {{- include "jarvis-spot-price-exporter.labels" . | nindent 12 }}
+        spec:
+          restartPolicy: Never
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          serviceAccountName: {{ include "jarvis-spot-price-exporter.serviceAccountName" . }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          containers:
+          - name: {{ .Chart.Name }}
+            securityContext:
+              {{- toYaml .Values.securityContext | nindent 14 }}
+            image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+            imagePullPolicy: {{ .Values.image.pullPolicy }}    
+            env:
+            - name: BQ_ENABLE
+              valueFrom:
+                configMapKeyRef:
+                  key: bq-enable
+                  name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+            - name: BQ_INIT
+              valueFrom:
+                configMapKeyRef:
+                  key: bq-init
+                  name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+            - name: BQ_PROJECT_ID
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+                  key: bq-project-id
+            - name: BQ_DATASET
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+                  key: bq-dataset
+            - name: BQ_TABLE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+                  key: bq-table
+            - name: SOURCE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+                  key: source
+            - name: URL
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+                  key: url
+            - name: QUERY
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+                  key: query
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /secrets/keyfile.json
+            resources:
+              {{- toYaml .Values.resources | nindent 14 }}
+            volumeMounts:
+            - name: secrets
+              mountPath: /secrets
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          terminationGracePeriodSeconds: 300
+          volumes:
+          - name: secrets
+            secret:
+              defaultMode: 420
+              secretName: {{ include "jarvis-spot-price-exporter.fullname" . }}
