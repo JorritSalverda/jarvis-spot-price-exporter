@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 cronjob:
-  schedule: '5 */6 * * *'
+  schedule: '5 */1 * * *'
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 1
   successfulJobsHistoryLimit: 2
@@ -14,7 +14,7 @@ config:
   bqInit: true
   bqProjectID: gcp-project-id
   bqDataset: jarvis
-  bqTable: jarvis_measurements
+  bqTable: jarvis_electricity_spot_prices
   source: ''
   url: ''
   query: ''
@@ -24,6 +24,7 @@ secret:
   gcpServiceAccountKeyfile: '{}'
 
 logFormat: json
+logLevel: info
 
 image:
   repository: jsalverda/jarvis-spot-price-exporter

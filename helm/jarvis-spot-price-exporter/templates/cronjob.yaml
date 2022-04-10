@@ -41,6 +41,8 @@ spec:
             image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
             imagePullPolicy: {{ .Values.image.pullPolicy }}    
             env:
+            - name: RUST_LOG
+              value: {{ .Values.logLevel | quote }}
             - name: BQ_ENABLE
               valueFrom:
                 configMapKeyRef:
