@@ -1,4 +1,4 @@
-FROM rust:1.57 as chef
+FROM rust:1.60 as chef
 ENV CARGO_TERM_COLOR=always
 WORKDIR /app
 RUN cargo install cargo-chef

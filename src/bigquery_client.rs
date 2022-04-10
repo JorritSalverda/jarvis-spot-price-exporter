@@ -77,6 +77,10 @@ impl BigqueryClient {
         Self { config }
     }
 
+    pub async fn from_env() -> Result<Self, Box<dyn Error>> {
+        Ok(Self::new(BigqueryClientConfig::from_env().await?))
+    }
+
     pub async fn check_if_table_exists(&self) -> bool {
         if !self.config.enable {
             return false;
@@ -180,7 +184,8 @@ impl BigqueryClient {
                         TableFieldSchema::float("sourcingMarkupPrice"),
                         TableFieldSchema::float("energyTaxPrice"),
                     ]),
-                ),
+                )
+                .time_partitioning(TimePartitioning::per_day().field("from")),
             )
             .await?;
 
@@ -226,6 +231,22 @@ impl BigqueryClient {
         } else {
             self.update_table_schema().await?
         }
+
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    #[ignore]
+    async fn create_table() -> Result<(), Box<dyn Error>> {
+        let bigquery_client = BigqueryClient::from_env().await?;
+
+        // act
+        bigquery_client.init_table().await?;
 
         Ok(())
     }

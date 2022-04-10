@@ -1,5 +1,5 @@
-use crate::types::{SpotPriceRequest,SpotPriceRequestVariables,SpotPriceResponse};
-use chrono::{Duration, Utc};
+use crate::types::{SpotPriceRequest, SpotPriceRequestVariables, SpotPriceResponse};
+use chrono::{DateTime, Duration, Utc};
 use log::debug;
 use std::env;
 use std::error::Error;
@@ -38,32 +38,34 @@ impl SpotPriceClient {
         Ok(Self::new(SpotPriceClientConfig::from_env()?))
     }
 
-    pub fn get_spot_prices(&self) -> Result<SpotPriceResponse, Box<dyn Error>> {
+    pub async fn get_spot_prices(
+        &self,
+        start_date: DateTime<Utc>,
+    ) -> Result<SpotPriceResponse, Box<dyn Error>> {
+        let end_date = start_date + Duration::days(1);
 
-        let today = Utc::now();
-        let tomorrow = today  + Duration::days(1);
-     
-        let request_body = SpotPriceRequest{
-          query: self.config.query.clone(),
-          variables:           SpotPriceRequestVariables{
-            start_date: today.format("%Y-%m-%d").to_string(),
-            end_date: tomorrow.format("%Y-%m-%d").to_string(),
-          },
-          operation_name:"MarketPrices".to_string(),
+        let request_body = SpotPriceRequest {
+            query: self.config.query.clone(),
+            variables: SpotPriceRequestVariables {
+                start_date: start_date.format("%Y-%m-%d").to_string(),
+                end_date: end_date.format("%Y-%m-%d").to_string(),
+            },
+            operation_name: "MarketPrices".to_string(),
         };
 
         let request_body = serde_json::to_string(&request_body)?;
         debug!("request body:\n{}", request_body);
 
-        let response = reqwest::blocking::Client::new()
+        let response = reqwest::Client::new()
             .post(&self.config.url)
             .body(request_body)
-            .send()?;
+            .send()
+            .await?;
 
         let status_code = response.status();
         debug!("response status: {}", status_code);
 
-        let response_body = response.text()?;
+        let response_body = response.text().await?;
         debug!("response body:\n{}", response_body);
 
         if !status_code.is_success() {
@@ -81,19 +83,16 @@ impl SpotPriceClient {
 mod tests {
     use super::*;
 
-    #[test]
+    #[tokio::test]
     #[ignore]
-    fn get_spot_prices() {
-        let spot_price_client = SpotPriceClient::new(
-            SpotPriceClientConfig::from_env()
-                .expect("Failed creating SpotPriceClientConfig"),
-        );
+    async fn get_spot_prices() -> Result<(), Box<dyn Error>> {
+        let spot_price_client =
+            SpotPriceClient::from_env().expect("Failed creating SpotPriceClient");
 
         // act
-        let spot_price_response = spot_price_client
-            .get_spot_prices()
-            .expect("Failed retrieving spot prices");
+        let spot_price_response = spot_price_client.get_spot_prices(Utc::now()).await?;
 
         assert_eq!(spot_price_response.data.market_prices_electricity.len(), 24);
+        Ok(())
     }
 }

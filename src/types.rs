@@ -16,7 +16,6 @@ pub struct SpotPriceRequestVariables {
     pub end_date: String,
 }
 
-
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct SpotPriceResponse {
@@ -51,16 +50,17 @@ fn init() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::error::Error;
     use std::fs;
 
     #[test]
-    fn deserialize_spot_price_response() {
-        let spot_price_predictions_content = fs::read_to_string("spot_price_predictions.json")
-            .expect("Failed reading spot_price_predictions.json");
+    fn deserialize_spot_price_response() -> Result<(), Box<dyn Error>> {
+        let spot_price_predictions_content = fs::read_to_string("spot_price_predictions.json")?;
 
         let spot_price_response: SpotPriceResponse =
-            serde_json::from_str(&spot_price_predictions_content).expect("Failed parsing json");
+            serde_json::from_str(&spot_price_predictions_content)?;
 
         assert_eq!(spot_price_response.data.market_prices_electricity.len(), 24);
+        Ok(())
     }
 }
