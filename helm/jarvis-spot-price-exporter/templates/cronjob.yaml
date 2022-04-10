@@ -66,6 +66,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "jarvis-spot-price-exporter.fullname" . }}
                   key: bq-table
+            - name: STATE_ENABLE
+              valueFrom:
+                configMapKeyRef:
+                  key: state-enable
+                  name: {{ include "jarvis-spot-price-exporter.fullname" . }}
             - name: SOURCE
               valueFrom:
                 configMapKeyRef:
@@ -86,6 +91,8 @@ spec:
             resources:
               {{- toYaml .Values.resources | nindent 14 }}
             volumeMounts:
+            - name: configs
+              mountPath: /configs
             - name: secrets
               mountPath: /secrets
           {{- with .Values.nodeSelector }}
@@ -102,6 +109,9 @@ spec:
           {{- end }}
           terminationGracePeriodSeconds: 300
           volumes:
+          - name: configs
+            configMap:
+              name: {{ include "jarvis-spot-price-exporter.fullname" . }}
           - name: secrets
             secret:
               defaultMode: 420

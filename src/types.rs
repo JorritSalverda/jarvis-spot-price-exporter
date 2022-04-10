@@ -28,7 +28,7 @@ pub struct SpotPriceData {
     pub market_prices_electricity: Vec<SpotPrice>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SpotPrice {
     pub id: Option<String>,
@@ -39,6 +39,13 @@ pub struct SpotPrice {
     pub market_price_tax: f64,
     pub sourcing_markup_price: f64,
     pub energy_tax_price: f64,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct State {
+    pub future_spot_prices: Vec<SpotPrice>,
+    pub last_from: DateTime<Utc>,
 }
 
 #[cfg(test)]

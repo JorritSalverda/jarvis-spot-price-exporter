@@ -18,6 +18,7 @@ config:
   source: ''
   url: ''
   query: ''
+  stateEnable: false
 
 secret:
   gcpServiceAccountKeyfile: '{}'

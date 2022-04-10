@@ -10,6 +10,7 @@ data:
   bq-project-id: {{ .Values.config.bqProjectID | quote }}
   bq-dataset: {{ .Values.config.bqDataset | quote }}
   bq-table: {{ .Values.config.bqTable | quote }}
+  state-enable: {{ .Values.config.stateEnable | quote }}
   source: {{ .Values.config.source | quote }}
   url: {{ .Values.config.url | quote }}
   query: {{ .Values.config.query | quote }}
