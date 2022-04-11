@@ -81,6 +81,7 @@ impl ExporterService {
     pub async fn run(&self, start_date: DateTime<Utc>) -> Result<(), Box<dyn Error>> {
         let now: DateTime<Utc> = Utc::now();
 
+        info!("Initalizing BigQuery table...");
         self.config.bigquery_client.init_table().await?;
 
         info!("Reading previous state...");
@@ -175,9 +176,10 @@ mod tests {
         let exporter_service =
             ExporterService::from_env(bigquery_client, spot_price_client, state_client)?;
 
-        let mut start_date: DateTime<Utc> = Utc.ymd(2021, 1, 1).and_hms_nano(0, 0, 0, 0);
+        let mut start_date: DateTime<Utc> = Utc.ymd(2020, 12, 1).and_hms_nano(0, 0, 0, 0);
+        let end_date: DateTime<Utc> = Utc.ymd(2021, 1, 1).and_hms_nano(0, 0, 0, 0);
 
-        while start_date < Utc::now() {
+        while start_date < end_date {
             exporter_service.run(start_date).await?;
             start_date = start_date + Duration::days(1)
         }

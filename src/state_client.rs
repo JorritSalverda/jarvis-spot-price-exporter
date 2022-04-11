@@ -11,7 +11,7 @@ use std::fs;
 use std::path::Path;
 
 pub struct StateClientConfig {
-    kube_client: kube::Client,
+    kube_client: Option<kube::Client>,
     state_file_path: String,
     state_file_configmap_name: String,
     current_namespace: String,
@@ -20,44 +20,53 @@ pub struct StateClientConfig {
 
 impl StateClientConfig {
     pub fn new(
-        kube_client: kube::Client,
-        state_file_path: String,
-        state_file_configmap_name: String,
-        current_namespace: String,
+        kube_client: Option<kube::Client>,
+        state_file_path: &str,
+        state_file_configmap_name: &str,
+        current_namespace: &str,
         enable: bool,
     ) -> Result<Self, Box<dyn Error>> {
         Ok(Self {
             kube_client,
-            state_file_path,
-            state_file_configmap_name,
-            current_namespace,
+            state_file_path: state_file_path.into(),
+            state_file_configmap_name: state_file_configmap_name.into(),
+            current_namespace: current_namespace.into(),
             enable,
         })
     }
 
     pub async fn from_env() -> Result<Self, Box<dyn Error>> {
-        let kube_client: kube::Client = Client::try_default().await?;
+        let enable: bool = env::var("STATE_ENABLE")
+            .unwrap_or_else(|_| "false".to_string())
+            .parse()
+            .unwrap_or(false);
 
         let state_file_path =
             env::var("STATE_FILE_PATH").unwrap_or_else(|_| "/configs/state.yaml".to_string());
         let state_file_configmap_name = env::var("STATE_FILE_CONFIG_MAP_NAME")
             .unwrap_or_else(|_| "jarvis-spot-price-exporter".to_string());
 
-        let current_namespace =
-            fs::read_to_string("/var/run/secrets/kubernetes.io/serviceaccount/namespace")?;
+        if enable {
+            let kube_client: kube::Client = Client::try_default().await?;
+            let current_namespace =
+                fs::read_to_string("/var/run/secrets/kubernetes.io/serviceaccount/namespace")?;
 
-        let enable: bool = env::var("STATE_ENABLE")
-            .unwrap_or_else(|_| "false".to_string())
-            .parse()
-            .unwrap_or(false);
-
-        Self::new(
-            kube_client,
-            state_file_path,
-            state_file_configmap_name,
-            current_namespace,
-            enable,
-        )
+            Self::new(
+                Some(kube_client),
+                &state_file_path,
+                &state_file_configmap_name,
+                &current_namespace,
+                enable,
+            )
+        } else {
+            Self::new(
+                None,
+                &state_file_path,
+                &state_file_configmap_name,
+                "",
+                enable,
+            )
+        }
     }
 }
 
@@ -96,7 +105,7 @@ impl StateClient {
 
     async fn get_state_configmap(&self) -> Result<ConfigMap, Box<dyn std::error::Error>> {
         let configmaps_api: Api<ConfigMap> = Api::namespaced(
-            self.config.kube_client.clone(),
+            self.config.kube_client.as_ref().unwrap().clone(),
             &self.config.current_namespace,
         );
 
@@ -112,7 +121,7 @@ impl StateClient {
         config_map: &ConfigMap,
     ) -> Result<(), Box<dyn std::error::Error>> {
         let configmaps_api: Api<ConfigMap> = Api::namespaced(
-            self.config.kube_client.clone(),
+            self.config.kube_client.as_ref().unwrap().clone(),
             &self.config.current_namespace,
         );
 
