@@ -42,7 +42,7 @@ impl ExporterServiceConfig {
         state_client: StateClient,
     ) -> Result<Self, Box<dyn Error>> {
         let source = env::var("SOURCE")?;
-        let predications_available_from_hour: u32 = env::var("PREDICATIONS_AVAILABLE_FROM_HOUR")
+        let predications_available_from_hour: u32 = env::var("PREDICTIONS_AVAILABLE_FROM_HOUR")
             .unwrap_or_else(|_| "13".to_string())
             .parse()
             .unwrap_or(13);

@@ -12,6 +12,6 @@ data:
   bq-table: {{ .Values.config.bqTable | quote }}
   state-enable: {{ .Values.config.stateEnable | quote }}
   source: {{ .Values.config.source | quote }}
-  predications-available-from-hour: {{ .Values.config.predicationsAvailableFromHour | quote }}
+  predictions-available-from-hour: {{ .Values.config.predictionsAvailableFromHour | quote }}
   url: {{ .Values.config.url | quote }}
   query: {{ .Values.config.query | quote }}

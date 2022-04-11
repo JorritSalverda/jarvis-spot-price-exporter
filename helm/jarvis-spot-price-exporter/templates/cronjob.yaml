@@ -78,11 +78,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "jarvis-spot-price-exporter.fullname" . }}
                   key: source
-            - name: PREDICATIONS_AVAILABLE_FROM_HOUR
+            - name: PREDICTIONS_AVAILABLE_FROM_HOUR
               valueFrom:
                 configMapKeyRef:
-                  name: {{ include "predications-available-from-hour" . }}
-                  key: source
+                  name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+                  key: predictions-available-from-hour
             - name: URL
               valueFrom:
                 configMapKeyRef:
