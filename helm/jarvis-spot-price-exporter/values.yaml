@@ -16,6 +16,7 @@ config:
   bqDataset: jarvis
   bqTable: jarvis_electricity_spot_prices
   source: ''
+  predicationsAvailableFromHour: 13
   url: ''
   query: ''
   stateEnable: false

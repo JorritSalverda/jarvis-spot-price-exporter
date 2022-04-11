@@ -2,8 +2,9 @@ use crate::bigquery_client::BigqueryClient;
 use crate::spot_price_client::SpotPriceClient;
 use crate::state_client::StateClient;
 use crate::types::*;
-use chrono::{DateTime, Utc};
-use log::info;
+use chrono::prelude::*;
+use chrono::{DateTime, Duration, Utc};
+use log::{info, warn};
 use std::env;
 use std::error::Error;
 use tokio_retry::strategy::{jitter, ExponentialBackoff};
@@ -15,6 +16,7 @@ pub struct ExporterServiceConfig {
     spot_price_client: SpotPriceClient,
     state_client: StateClient,
     source: String,
+    predications_available_from_hour: u32,
 }
 
 impl ExporterServiceConfig {
@@ -23,12 +25,14 @@ impl ExporterServiceConfig {
         spot_price_client: SpotPriceClient,
         state_client: StateClient,
         source: &str,
+        predications_available_from_hour: u32,
     ) -> Result<Self, Box<dyn Error>> {
         Ok(Self {
             bigquery_client,
             spot_price_client,
             state_client,
             source: source.to_string(),
+            predications_available_from_hour,
         })
     }
 
@@ -38,8 +42,18 @@ impl ExporterServiceConfig {
         state_client: StateClient,
     ) -> Result<Self, Box<dyn Error>> {
         let source = env::var("SOURCE")?;
+        let predications_available_from_hour: u32 = env::var("PREDICATIONS_AVAILABLE_FROM_HOUR")
+            .unwrap_or_else(|_| "13".to_string())
+            .parse()
+            .unwrap_or(13);
 
-        Self::new(bigquery_client, spot_price_client, state_client, &source)
+        Self::new(
+            bigquery_client,
+            spot_price_client,
+            state_client,
+            &source,
+            predications_available_from_hour,
+        )
     }
 }
 
@@ -65,6 +79,8 @@ impl ExporterService {
     }
 
     pub async fn run(&self, start_date: DateTime<Utc>) -> Result<(), Box<dyn Error>> {
+        let now: DateTime<Utc> = Utc::now();
+
         self.config.bigquery_client.init_table().await?;
 
         info!("Reading previous state...");
@@ -77,22 +93,43 @@ impl ExporterService {
         )
         .await?;
 
+        let mut retrieved_spot_prices = spot_price_response.data.market_prices_electricity;
+        if start_date.date() == now.date()
+            && now.hour() > self.config.predications_available_from_hour
+        {
+            let tomorrow = start_date + Duration::days(1);
+            info!("Retrieving spot price predictions for {}...", tomorrow);
+            match Retry::spawn(
+                ExponentialBackoff::from_millis(100).map(jitter).take(3),
+                || self.config.spot_price_client.get_spot_prices(tomorrow),
+            )
+            .await
+            {
+                Ok(mut prices) => {
+                    retrieved_spot_prices.append(&mut prices.data.market_prices_electricity);
+                }
+                Err(_) => {
+                    warn!("No predictions for tomorrow yet, will try again next run");
+                }
+            };
+        }
+
         info!("Storing retrieved spot prices for {}...", start_date);
         let mut future_spot_prices: Vec<SpotPrice> = vec![];
         let mut last_from: Option<DateTime<Utc>> = None;
-        for spot_price in &spot_price_response.data.market_prices_electricity {
+        for spot_price in &retrieved_spot_prices {
             let spot_price = SpotPrice {
                 id: Some(Uuid::new_v4().to_string()),
                 source: Some(self.config.source.clone()),
                 ..spot_price.clone()
             };
 
-            if spot_price.till > Utc::now() {
+            if spot_price.till > now {
                 future_spot_prices.push(spot_price.clone());
             }
 
             info!("{:?}", spot_price);
-            let mut write_spot_price = spot_price.till < Utc::now();
+            let mut write_spot_price = spot_price.till < now;
             if let Some(st) = &state {
                 write_spot_price = write_spot_price && spot_price.from > st.last_from;
             }
