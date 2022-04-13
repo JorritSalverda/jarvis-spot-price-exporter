@@ -150,8 +150,10 @@ impl ExporterService {
                 )
                 .await?;
                 last_from = Some(spot_price.from);
+            } else if is_prediction {
+                info!("Skipping writing to BigQuery, it's a prediction");
             } else {
-                info!("Skipping writing to BigQuery, already present")
+                info!("Skipping writing to BigQuery, already present");
             }
         }
 
