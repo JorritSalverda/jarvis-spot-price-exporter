@@ -125,13 +125,12 @@ impl ExporterService {
                 ..spot_price.clone()
             };
 
-            if spot_price.till > now {
-                future_spot_prices.push(spot_price.clone());
-            }
-
             info!("{:?}", spot_price);
-            let mut write_spot_price = spot_price.till < now;
-            if let Some(st) = &state {
+            let is_prediction = spot_price.till > now;
+            let mut write_spot_price = !is_prediction;
+            if is_prediction {
+                future_spot_prices.push(spot_price.clone());
+            } else if let Some(st) = &state {
                 write_spot_price = write_spot_price && spot_price.from > st.last_from;
             }
 
