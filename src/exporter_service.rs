@@ -95,6 +95,7 @@ impl ExporterService {
         .await?;
 
         let mut retrieved_spot_prices = spot_price_response.data.market_prices_electricity;
+        info!("Retrieved {} spot prices", retrieved_spot_prices.len());
         if start_date.date() == now.date()
             && now.hour() > self.config.predications_available_from_hour
         {
@@ -107,7 +108,15 @@ impl ExporterService {
             .await
             {
                 Ok(mut prices) => {
-                    retrieved_spot_prices.append(&mut prices.data.market_prices_electricity);
+                    info!(
+                        "Retrieved {} spot price predictions",
+                        prices.data.market_prices_electricity.len()
+                    );
+                    if !prices.data.market_prices_electricity.is_empty() {
+                        retrieved_spot_prices.append(&mut prices.data.market_prices_electricity);
+                    } else {
+                        warn!("No predictions for tomorrow yet, will try again next run");
+                    }
                 }
                 Err(_) => {
                     warn!("No predictions for tomorrow yet, will try again next run");
