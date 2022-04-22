@@ -6,6 +6,7 @@ use chrono::prelude::*;
 use chrono::{DateTime, Duration, Utc};
 use chrono_tz::Tz;
 use log::{info, warn};
+use std::cmp::Ordering;
 use std::env;
 use std::error::Error;
 use tokio_retry::strategy::{jitter, ExponentialBackoff};
@@ -189,17 +190,15 @@ fn clean_spot_prices(local_time_zone: Tz, spot_prices: Vec<SpotPrice>) -> Vec<Sp
         spot_prices
             .into_iter()
             .enumerate()
-            .map(|(index, spot_price)| {
-                if index < 2 {
-                    shift_to_correct_utc(spot_price)
-                } else if index == 2 {
-                  let mut spot_price = spot_price.clone();
+            .map(|(index, spot_price)| match index.cmp(&2) {
+                Ordering::Less => shift_to_correct_utc(spot_price),
+                Ordering::Equal => {
+                    let mut spot_price = spot_price;
 
-                  spot_price.from = spot_price.from - Duration::hours(1);
-                  spot_price
-                } else {
+                    spot_price.from = spot_price.from - Duration::hours(1);
                     spot_price
                 }
+                Ordering::Greater => spot_price,
             })
             .collect()
     } else if spot_prices.len() == 23 {
@@ -216,17 +215,14 @@ fn clean_spot_prices(local_time_zone: Tz, spot_prices: Vec<SpotPrice>) -> Vec<Sp
             })
             .collect()
     } else if spot_prices[0].from.with_timezone(&local_time_zone).hour() > 0 {
-      spot_prices
-      .into_iter()
-      .map(shift_to_correct_utc)
-      .collect()
+        spot_prices.into_iter().map(shift_to_correct_utc).collect()
     } else {
-      spot_prices
+        spot_prices
     }
 }
 
 fn shift_to_correct_utc(spot_price: SpotPrice) -> SpotPrice {
-    let mut spot_price = spot_price.clone();
+    let mut spot_price = spot_price;
 
     spot_price.from = spot_price.from - Duration::hours(1);
     spot_price.till = spot_price.till - Duration::hours(1);
