@@ -83,6 +83,11 @@ spec:
                 configMapKeyRef:
                   name: {{ include "jarvis-spot-price-exporter.fullname" . }}
                   key: predictions-available-from-hour
+            - name: LOCAL_TIME_ZONE
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ include "jarvis-spot-price-exporter.fullname" . }}
+                  key: local-time-zone
             - name: URL
               valueFrom:
                 configMapKeyRef:

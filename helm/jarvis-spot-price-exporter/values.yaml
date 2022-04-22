@@ -17,6 +17,7 @@ config:
   bqTable: jarvis_electricity_spot_prices
   source: ''
   predictionsAvailableFromHour: 13
+  localTimeZone: Europe/Amsterdam
   url: ''
   query: ''
   stateEnable: false
