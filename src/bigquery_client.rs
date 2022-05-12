@@ -4,6 +4,7 @@ use gcp_bigquery_client::model::table_data_insert_all_request::TableDataInsertAl
 use gcp_bigquery_client::model::table_field_schema::TableFieldSchema;
 use gcp_bigquery_client::model::table_schema::TableSchema;
 use gcp_bigquery_client::model::time_partitioning::TimePartitioning;
+use log::info;
 use std::env;
 use std::error::Error;
 use std::{thread, time};
@@ -143,7 +144,7 @@ impl BigqueryClient {
             }
         }
 
-        println!("Created bigquery table {}", &self.config.table);
+        info!("Created bigquery table {}", &self.config.table);
 
         Ok(())
     }
@@ -189,7 +190,7 @@ impl BigqueryClient {
             )
             .await?;
 
-        println!("Updated schema for bigquery table {}", &self.config.table);
+        info!("Updated schema for bigquery table {}", &self.config.table);
 
         Ok(())
     }
@@ -213,7 +214,7 @@ impl BigqueryClient {
             )
             .await?;
 
-        println!(
+        info!(
             "Inserted spot price {:#?} into bigquery table {}",
             &spot_price, &self.config.table
         );

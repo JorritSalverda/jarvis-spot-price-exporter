@@ -4,6 +4,7 @@ use kube::{
     api::{Api, PostParams},
     Client,
 };
+use log::info;
 use std::collections::BTreeMap;
 use std::env;
 use std::error::Error;
@@ -98,7 +99,7 @@ impl StateClient {
             Err(_) => return Ok(Option::None),
         };
 
-        println!("Read state file at {}", &self.config.state_file_path);
+        info!("Read state file at {}", &self.config.state_file_path);
 
         Ok(last_state)
     }
@@ -171,7 +172,7 @@ impl StateClient {
         // update configmap to have state available when the application runs the next time and for other applications
         self.update_state_configmap(&config_map).await?;
 
-        println!(
+        info!(
             "Stored last state in configmap {}",
             &self.config.state_file_configmap_name
         );

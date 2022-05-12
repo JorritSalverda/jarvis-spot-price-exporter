@@ -13,7 +13,7 @@ use std::error::Error;
 
 #[tokio::main]
 pub async fn main() -> Result<(), Box<dyn Error>> {
-    env_logger::init();
+    json_env_logger::init();
 
     let bigquery_client = BigqueryClient::from_env().await?;
     let spot_price_client = SpotPriceClient::from_env()?;

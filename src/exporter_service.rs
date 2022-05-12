@@ -126,7 +126,10 @@ impl ExporterService {
                         prices.data.market_prices_electricity.len()
                     );
                     if !prices.data.market_prices_electricity.is_empty() {
-                        retrieved_spot_prices.append(&mut correct_timezone_errors(local_time_zone, prices.data.market_prices_electricity));
+                        retrieved_spot_prices.append(&mut correct_timezone_errors(
+                            local_time_zone,
+                            prices.data.market_prices_electricity,
+                        ));
                     } else {
                         warn!("No predictions for tomorrow yet, will try again next run");
                     }
