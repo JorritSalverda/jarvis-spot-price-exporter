@@ -24,3 +24,9 @@ pub async fn main() -> Result<(), Box<dyn Error>> {
 
     exporter_service.run(Utc::now()).await
 }
+
+#[cfg(test)]
+#[ctor::ctor]
+fn init() {
+    json_env_logger::init();
+}
