@@ -96,7 +96,7 @@ impl ExporterService {
         info!("Reading previous state...");
         let state = self.config.state_client.read_state()?;
 
-        info!("Retrieving spot prices for {}...", start_date);
+        info!("Retrieving day-ahead prices for {}...", start_date);
         let spot_price_response = Retry::spawn(
             ExponentialBackoff::from_millis(100).map(jitter).take(3),
             || self.config.spot_price_client.get_spot_prices(start_date),
@@ -108,12 +108,12 @@ impl ExporterService {
             local_time_zone,
             spot_price_response.data.market_prices_electricity,
         );
-        info!("Retrieved {} spot prices", retrieved_spot_prices.len());
+        info!("Retrieved {} day-ahead prices", retrieved_spot_prices.len());
         if start_date.date() == now.date()
             && now.hour() > self.config.predictions_available_from_hour
         {
             let tomorrow = start_date + Duration::days(1);
-            info!("Retrieving spot price predictions for {}...", tomorrow);
+            info!("Retrieving day-ahead prices for {}...", tomorrow);
             match Retry::spawn(
                 ExponentialBackoff::from_millis(100).map(jitter).take(3),
                 || self.config.spot_price_client.get_spot_prices(tomorrow),
@@ -122,7 +122,7 @@ impl ExporterService {
             {
                 Ok(prices) => {
                     info!(
-                        "Retrieved {} spot price predictions",
+                        "Retrieved {} day-ahead prices",
                         prices.data.market_prices_electricity.len()
                     );
                     if !prices.data.market_prices_electricity.is_empty() {
@@ -131,16 +131,16 @@ impl ExporterService {
                             prices.data.market_prices_electricity,
                         ));
                     } else {
-                        warn!("No predictions for tomorrow yet, will try again next run");
+                        warn!("No day-ahead prices for tomorrow yet, will try again next run");
                     }
                 }
                 Err(_) => {
-                    warn!("No predictions for tomorrow yet, will try again next run");
+                    warn!("No day-ahead prices for tomorrow yet, will try again next run");
                 }
             };
         }
 
-        info!("Storing retrieved spot prices for {}...", start_date);
+        info!("Storing retrieved day-ahead prices for {}...", start_date);
         let mut future_spot_prices: Vec<SpotPrice> = vec![];
         let mut last_from: Option<DateTime<Utc>> = None;
         for spot_price in &retrieved_spot_prices {
@@ -151,13 +151,15 @@ impl ExporterService {
             };
 
             info!("{:?}", spot_price);
-            let is_prediction = spot_price.till > now;
-            let mut write_spot_price = !is_prediction;
-            if is_prediction {
+            if spot_price.till > now {
                 future_spot_prices.push(spot_price.clone());
-            } else if let Some(st) = &state {
-                write_spot_price = write_spot_price && spot_price.from > st.last_from;
             }
+
+            let write_spot_price = if let Some(st) = &state {
+                spot_price.from > st.last_from
+            } else {
+                true
+            };
 
             if write_spot_price {
                 Retry::spawn(
@@ -166,8 +168,6 @@ impl ExporterService {
                 )
                 .await?;
                 last_from = Some(spot_price.from);
-            } else if is_prediction {
-                info!("Skipping writing to BigQuery, it's a prediction");
             } else {
                 info!("Skipping writing to BigQuery, already present");
             }

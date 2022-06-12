@@ -3,7 +3,7 @@
 # Declare variables to be passed into your templates.
 
 cronjob:
-  schedule: '5 */1 * * *'
+  schedule: '5 13,14,15 * * *'
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 1
   successfulJobsHistoryLimit: 2
