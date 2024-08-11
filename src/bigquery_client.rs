@@ -87,8 +87,7 @@ impl BigqueryClient {
             return false;
         }
 
-        return self
-            .config
+        self.config
             .client
             .table()
             .get(
@@ -98,7 +97,7 @@ impl BigqueryClient {
                 None,
             )
             .await
-            .is_ok();
+            .is_ok()
     }
 
     pub async fn create_table(&self, wait_ready: bool) -> Result<(), Box<dyn Error>> {

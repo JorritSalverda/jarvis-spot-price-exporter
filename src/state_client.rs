@@ -5,7 +5,6 @@ use kube::{
     Client,
 };
 use log::info;
-use std::collections::BTreeMap;
 use std::env;
 use std::error::Error;
 use std::fs;
@@ -162,10 +161,8 @@ impl StateClient {
         };
 
         // update data in configmap
-        let mut data: std::collections::BTreeMap<String, String> = match config_map.data {
-            Some(d) => d,
-            None => BTreeMap::new(),
-        };
+        let mut data: std::collections::BTreeMap<String, String> =
+            config_map.data.unwrap_or_default();
         data.insert(state_file_name, yaml_data);
         config_map.data = Some(data);
 
