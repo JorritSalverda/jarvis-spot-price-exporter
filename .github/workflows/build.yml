@@ -1,57 +1,116 @@
 name: Build
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+
+env:
+  CARGO_TERM_COLOR: always
 
 jobs:
-  gitversion:
+  tag:
     runs-on: ubuntu-latest
     outputs:
-      semVer: ${{ steps.gitversion.outputs.semVer }}
+      new_tag: ${{ steps.tag.outputs.new_tag }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+      - uses: mathieudutour/github-tag-action@v6.2
+        id: tag
         with:
-          fetch-depth: 0
-      - uses: gittools/actions/gitversion/setup@v0.9.7
+          github_token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform:
+          - name: amd64
+            target: x86_64-unknown-linux-gnu
+          - name: arm64
+            target: aarch64-unknown-linux-gnu
+    steps:
+      - name: Prepare variables
+        run: |
+          echo "CRATE_NAME=${GITHUB_REPOSITORY/#${GITHUB_REPOSITORY_OWNER}\//}" >> "$GITHUB_ENV"
+      - uses: webfactory/ssh-agent@v0.9.0
         with:
-          versionSpec: '5.x'
-      - id: gitversion
-        uses: gittools/actions/gitversion/execute@v0.9.7
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - uses: actions/checkout@v4
+      - uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.platform.name }}
+      - run: cargo clippy --no-deps -- --deny "warnings"
+      - name: Build binary
+        uses: houseabsolute/actions-rust-cross@v0
+        with:
+          command: both
+          target: ${{ matrix.platform.target }}
+          args: "--locked --release"
+          strip: true
+      - run: mv target/${{ matrix.platform.target }}/release/${CRATE_NAME} jarvis
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.name }}
+          path: jarvis
+          retention-days: 1
 
   docker:
     runs-on: ubuntu-latest
-    needs: gitversion
-    env:
-      GITVERSION_SEMVER: ${{ needs.gitversion.outputs.semVer }}
+    needs:
+      - tag
+      - build
     steps:
-      - uses: actions/checkout@v2
-      - uses: docker/setup-buildx-action@v1
-      - uses: docker/login-action@v1
+      - name: Prepare variables
+        id: variables
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY/#${GITHUB_REPOSITORY_OWNER}/jsalverda}" >> "$GITHUB_ENV"
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY/#${GITHUB_REPOSITORY_OWNER}/jsalverda}" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: linux
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ steps.variables.outputs.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ needs.tag.outputs.new_tag }}
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build docker image
-        run: |
-          IMAGE_NAME="jsalverda/jarvis-spot-price-exporter"
-          # https://docs.openfn.org/articles/2021/10/08/improving-multistage-docker-builds-using-buildx/
-          docker buildx build \
-            --tag $IMAGE_NAME:$GITVERSION_SEMVER \
-            --cache-from=type=registry,ref=$IMAGE_NAME-build-cache \
-            --cache-to=type=registry,ref=$IMAGE_NAME-build-cache,mode=max \
-            --file Dockerfile \
-            --push \
-            --progress=plain \
-            .
+      - uses: docker/build-push-action@v5
+        id: build
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
 
   helm:
     runs-on: ubuntu-latest
-    needs: [gitversion, docker]
-    env:
-      GITVERSION_SEMVER: ${{ needs.gitversion.outputs.semVer }}
+    needs:
+      - tag
+      - build
     steps:
-      - uses: actions/checkout@v2
-      - uses: azure/setup-helm@v1
-      - run: helm lint --with-subcharts helm/jarvis-spot-price-exporter
-      - run: helm package --app-version $GITVERSION_SEMVER --version $GITVERSION_SEMVER --dependency-update helm/jarvis-spot-price-exporter
+      - name: Prepare variables
+        run: |
+          echo "HELM_NAME=${GITHUB_REPOSITORY/#${GITHUB_REPOSITORY_OWNER}\//}" >> "$GITHUB_ENV"
+      - uses: actions/checkout@v4
+      - uses: azure/setup-helm@v3
+        with:
+          version: v3.10.1
+      - run: helm lint --with-subcharts helm/$HELM_NAME
+      - run: helm package --app-version ${{ needs.tag.outputs.new_tag }} --version ${{ needs.tag.outputs.new_tag }} --dependency-update helm/${{ env.HELM_NAME }}
       - uses: actions/checkout@v2
         with:
           repository: JorritSalverda/helm-charts
@@ -60,22 +119,12 @@ jobs:
           token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - run: |
           mkdir -p helm-charts/charts
-          cp jarvis-spot-price-exporter-${GITVERSION_SEMVER}.tgz helm-charts/charts
+          cp $HELM_NAME-${{ needs.tag.outputs.new_tag }}.tgz helm-charts/charts
           cd helm-charts
           helm repo index --url https://helm.jorritsalverda.com/ .
           git config user.email 'bot@estafette.io'
           git config user.name 'estafette-bot'
           git add --all
-          git commit --allow-empty -m "jarvis-spot-price-exporter $GITVERSION_SEMVER"
+          git commit --allow-empty -m "$HELM_NAME ${{ needs.tag.outputs.new_tag }}"
           git push origin master
 
-  tag:
-    runs-on: ubuntu-latest
-    needs: [gitversion, docker, helm]
-    env:
-      GITVERSION_SEMVER: ${{ needs.gitversion.outputs.semVer }}
-    steps:
-      - uses: actions/checkout@v2
-      - run: |
-          git tag -f $GITVERSION_SEMVER
-          git push origin $GITVERSION_SEMVER
