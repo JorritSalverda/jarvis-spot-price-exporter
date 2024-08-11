@@ -109,7 +109,7 @@ impl ExporterService {
             spot_price_response.data.market_prices_electricity,
         );
         info!("Retrieved {} day-ahead prices", retrieved_spot_prices.len());
-        if start_date.date() == now.date()
+        if start_date.date_naive() == now.date_naive()
             && now.hour() > self.config.predictions_available_from_hour
         {
             let tomorrow = start_date + Duration::days(1);
@@ -212,8 +212,7 @@ fn correct_timezone_errors(local_time_zone: Tz, spot_prices: Vec<SpotPrice>) -> 
                 Ordering::Equal => {
                     let mut spot_price = spot_price;
 
-                    spot_price.from =
-                        spot_price.from - Duration::hours(start_time_hour_shift.into());
+                    spot_price.from -= Duration::hours(start_time_hour_shift.into());
                     spot_price
                 }
                 Ordering::Greater => spot_price,
@@ -248,8 +247,8 @@ fn correct_timezone_errors(local_time_zone: Tz, spot_prices: Vec<SpotPrice>) -> 
 fn shift_to_correct_utc(spot_price: SpotPrice, num_hours_to_shift: u32) -> SpotPrice {
     let mut spot_price = spot_price;
 
-    spot_price.from = spot_price.from - Duration::hours(num_hours_to_shift.into());
-    spot_price.till = spot_price.till - Duration::hours(num_hours_to_shift.into());
+    spot_price.from -= Duration::hours(num_hours_to_shift.into());
+    spot_price.till -= Duration::hours(num_hours_to_shift.into());
 
     spot_price
 }
@@ -280,38 +279,38 @@ mod tests {
 
         assert_eq!(
             corrected_spot_prices[0].from,
-            Utc.ymd(2022, 3, 26).and_hms(23, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 26, 23, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[0].till,
-            Utc.ymd(2022, 3, 27).and_hms(0, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 27, 0, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[1].from,
-            Utc.ymd(2022, 3, 27).and_hms(0, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 27, 0, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[1].till,
-            Utc.ymd(2022, 3, 27).and_hms(1, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 27, 1, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[2].from,
-            Utc.ymd(2022, 3, 27).and_hms(1, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 27, 1, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[2].till,
-            Utc.ymd(2022, 3, 27).and_hms(2, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 27, 2, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[22].from,
-            Utc.ymd(2022, 3, 27).and_hms(21, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 27, 21, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[22].till,
-            Utc.ymd(2022, 3, 27).and_hms(22, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 27, 22, 0, 0).unwrap()
         );
 
         Ok(())
@@ -334,38 +333,38 @@ mod tests {
 
         assert_eq!(
             corrected_spot_prices[0].from,
-            Utc.ymd(2022, 3, 26).and_hms(23, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 26, 23, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[0].till,
-            Utc.ymd(2022, 3, 27).and_hms(0, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 27, 0, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[1].from,
-            Utc.ymd(2022, 3, 27).and_hms(0, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 27, 0, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[1].till,
-            Utc.ymd(2022, 3, 27).and_hms(1, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 27, 1, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[2].from,
-            Utc.ymd(2022, 3, 27).and_hms(1, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 27, 1, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[2].till,
-            Utc.ymd(2022, 3, 27).and_hms(2, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 27, 2, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[22].from,
-            Utc.ymd(2022, 3, 27).and_hms(21, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 27, 21, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[22].till,
-            Utc.ymd(2022, 3, 27).and_hms(22, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 27, 22, 0, 0).unwrap()
         );
 
         Ok(())
@@ -392,38 +391,38 @@ mod tests {
         assert_eq!(corrected_spot_prices.len(), 25);
         assert_eq!(
             corrected_spot_prices[0].from,
-            Utc.ymd(2021, 10, 30).and_hms(22, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 30, 22, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[0].till,
-            Utc.ymd(2021, 10, 30).and_hms(23, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 30, 23, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[1].from,
-            Utc.ymd(2021, 10, 30).and_hms(23, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 30, 23, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[1].till,
-            Utc.ymd(2021, 10, 31).and_hms(0, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 31, 0, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[2].from,
-            Utc.ymd(2021, 10, 31).and_hms(0, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 31, 0, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[2].till,
-            Utc.ymd(2021, 10, 31).and_hms(1, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 31, 1, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[24].from,
-            Utc.ymd(2021, 10, 31).and_hms(22, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 31, 22, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[24].till,
-            Utc.ymd(2021, 10, 31).and_hms(23, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 31, 23, 0, 0).unwrap()
         );
 
         Ok(())
@@ -445,38 +444,38 @@ mod tests {
         assert_eq!(corrected_spot_prices.len(), 25);
         assert_eq!(
             corrected_spot_prices[0].from,
-            Utc.ymd(2021, 10, 30).and_hms(22, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 30, 22, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[0].till,
-            Utc.ymd(2021, 10, 30).and_hms(23, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 30, 23, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[1].from,
-            Utc.ymd(2021, 10, 30).and_hms(23, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 30, 23, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[1].till,
-            Utc.ymd(2021, 10, 31).and_hms(0, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 31, 0, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[2].from,
-            Utc.ymd(2021, 10, 31).and_hms(0, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 31, 0, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[2].till,
-            Utc.ymd(2021, 10, 31).and_hms(1, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 31, 1, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[24].from,
-            Utc.ymd(2021, 10, 31).and_hms(22, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 31, 22, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[24].till,
-            Utc.ymd(2021, 10, 31).and_hms(23, 0, 0)
+            Utc.with_ymd_and_hms(2021, 10, 31, 23, 0, 0).unwrap()
         );
 
         Ok(())
@@ -497,20 +496,20 @@ mod tests {
         assert_eq!(corrected_spot_prices.len(), 24);
         assert_eq!(
             corrected_spot_prices[0].from,
-            Utc.ymd(2021, 12, 31).and_hms(23, 0, 0)
+            Utc.with_ymd_and_hms(2021, 12, 31, 23, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[0].till,
-            Utc.ymd(2022, 1, 1).and_hms(0, 0, 0)
+            Utc.with_ymd_and_hms(2022, 1, 1, 0, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[23].from,
-            Utc.ymd(2022, 1, 1).and_hms(22, 0, 0)
+            Utc.with_ymd_and_hms(2022, 1, 1, 22, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[23].till,
-            Utc.ymd(2022, 1, 1).and_hms(23, 0, 0)
+            Utc.with_ymd_and_hms(2022, 1, 1, 23, 0, 0).unwrap()
         );
 
         Ok(())
@@ -532,20 +531,20 @@ mod tests {
         assert_eq!(corrected_spot_prices.len(), 24);
         assert_eq!(
             corrected_spot_prices[0].from,
-            Utc.ymd(2022, 3, 31).and_hms(22, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 31, 22, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[0].till,
-            Utc.ymd(2022, 3, 31).and_hms(23, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 31, 23, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[23].from,
-            Utc.ymd(2022, 4, 1).and_hms(21, 0, 0)
+            Utc.with_ymd_and_hms(2022, 4, 1, 21, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[23].till,
-            Utc.ymd(2022, 4, 1).and_hms(22, 0, 0)
+            Utc.with_ymd_and_hms(2022, 4, 1, 22, 0, 0).unwrap()
         );
 
         Ok(())
@@ -567,20 +566,20 @@ mod tests {
         assert_eq!(corrected_spot_prices.len(), 24);
         assert_eq!(
             corrected_spot_prices[0].from,
-            Utc.ymd(2022, 3, 31).and_hms(22, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 31, 22, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[0].till,
-            Utc.ymd(2022, 3, 31).and_hms(23, 0, 0)
+            Utc.with_ymd_and_hms(2022, 3, 31, 23, 0, 0).unwrap()
         );
 
         assert_eq!(
             corrected_spot_prices[23].from,
-            Utc.ymd(2022, 4, 1).and_hms(21, 0, 0)
+            Utc.with_ymd_and_hms(2022, 4, 1, 21, 0, 0).unwrap()
         );
         assert_eq!(
             corrected_spot_prices[23].till,
-            Utc.ymd(2022, 4, 1).and_hms(22, 0, 0)
+            Utc.with_ymd_and_hms(2022, 4, 1, 22, 0, 0).unwrap()
         );
 
         Ok(())
@@ -596,8 +595,8 @@ mod tests {
         let exporter_service =
             ExporterService::from_env(bigquery_client, spot_price_client, state_client)?;
 
-        let mut start_date: DateTime<Utc> = Utc.ymd(2020, 12, 1).and_hms_nano(0, 0, 0, 0);
-        let end_date: DateTime<Utc> = Utc.ymd(2021, 1, 1).and_hms_nano(0, 0, 0, 0);
+        let mut start_date: DateTime<Utc> = Utc.with_ymd_and_hms(2020, 12, 1, 0, 0, 0).unwrap();
+        let end_date: DateTime<Utc> = Utc.with_ymd_and_hms(2021, 1, 1, 0, 0, 0).unwrap();
 
         while start_date < end_date {
             exporter_service.run(start_date).await?;
